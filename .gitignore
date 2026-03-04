@@ -1,0 +1,22 @@
+# Dataset
+images/
+annotation.json
+
+# Synthetic output
+synthetic_output/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.eggs/
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
