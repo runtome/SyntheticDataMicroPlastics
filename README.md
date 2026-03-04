@@ -83,6 +83,63 @@ synthetic_output/
 
 The output `synthetic_annotation.json` follows the same COCO format as the source `annotation.json`, making it directly compatible with existing training pipelines.
 
+## Method 2: Diffusion Model (DDPM)
+
+A class-label-conditioned denoising diffusion model trained on individual object crops. Generates new microplastic objects from learned distributions rather than copy-pasting real ones.
+
+### Additional Requirements
+
+- PyTorch 2.0+, torchvision, diffusers, accelerate (included in `requirements.txt`)
+- GPU recommended for training; CPU works for small experiments
+
+### Training
+
+```bash
+# Full training (GPU)
+python train_diffusion.py --num-epochs 300 --batch-size 16
+
+# Quick test (CPU)
+python train_diffusion.py --num-epochs 5 --batch-size 4 --save-every 5
+
+# Resume from checkpoint
+python train_diffusion.py --resume diffusion_checkpoints/checkpoint-100
+```
+
+| Flag             | Default                  | Description                         |
+|------------------|--------------------------|-------------------------------------|
+| `--image-size`   | 128                      | Square crop size in pixels          |
+| `--num-epochs`   | 300                      | Training epochs                     |
+| `--batch-size`   | 16                       | Batch size                          |
+| `--lr`           | 1e-4                     | Learning rate                       |
+| `--save-every`   | 50                       | Checkpoint interval (epochs)        |
+| `--resume`       | —                        | Checkpoint dir to resume from       |
+| `--fp16`         | off                      | Mixed precision (GPU only)          |
+
+### Inference
+
+```bash
+# Generate individual crops (saved as PNG with alpha)
+python generate_diffusion.py --checkpoint diffusion_checkpoints/checkpoint-300 \
+    --num-per-class 50
+
+# Generate full composed scenes with COCO annotations
+python generate_diffusion.py --checkpoint diffusion_checkpoints/checkpoint-300 \
+    --compose --num-images 200 --background-mode inpaint
+
+# Generate only specific classes
+python generate_diffusion.py --checkpoint diffusion_checkpoints/checkpoint-300 \
+    --classes Film Fragment --num-per-class 100
+```
+
+| Flag                | Default              | Description                              |
+|---------------------|----------------------|------------------------------------------|
+| `--checkpoint`      | (required)           | Path to diffusers checkpoint directory   |
+| `--num-per-class`   | 50                   | Crops to generate per class              |
+| `--classes`         | all                  | Subset of classes to generate            |
+| `--compose`         | off                  | Enable scene composition mode            |
+| `--num-images`      | 100                  | Number of composed scenes                |
+| `--background-mode` | inpaint              | Background mode for composition          |
+
 ## Recommended Usage for Training
 
 Combine synthetic data with original data at a 1:1 or 2:1 ratio (synthetic:real). Do not replace real data entirely.
@@ -97,6 +154,8 @@ real : synthetic = 1 : 1  OR  1 : 2
 SyntheticDataMicroPlastics/
   annotation.json          # Source COCO annotations (596 images, 901 annotations)
   images/                  # Source microscopy images (640x480, JPG)
-  generate_synthetic.py    # Synthetic data generation script
+  generate_synthetic.py    # Patch-based composition (Method 1)
+  train_diffusion.py       # DDPM training script (Method 2)
+  generate_diffusion.py    # DDPM inference & composition (Method 2)
   requirements.txt         # Python dependencies
 ```

@@ -33,3 +33,35 @@ Key CLI flags: `--num-images`, `--seed`, `--background-mode` (inpaint|crop|noise
 6. **Output** — saves images + COCO JSON to `synthetic_output/`
 
 Class weights default to Fiber=1.0, Fragment=2.5, Film=8.0 to invert the imbalance.
+
+## Diffusion Model (Method 1)
+
+Class-label-conditioned DDPM that generates individual object crops. Complements the patch-based composition approach above.
+
+### Training
+
+```bash
+python train_diffusion.py --num-epochs 300 --batch-size 16           # GPU
+python train_diffusion.py --num-epochs 50 --batch-size 4             # CPU test
+python train_diffusion.py --resume diffusion_checkpoints/checkpoint-100
+```
+
+Key flags: `--image-size` (default 128), `--num-epochs`, `--batch-size`, `--lr`, `--save-every`, `--resume`, `--fp16`
+
+### Inference
+
+```bash
+# Individual crops
+python generate_diffusion.py --checkpoint diffusion_checkpoints/checkpoint-300 --num-per-class 50
+
+# Full composed scenes + COCO JSON
+python generate_diffusion.py --checkpoint diffusion_checkpoints/checkpoint-300 \
+    --compose --num-images 200 --background-mode inpaint
+```
+
+Key flags: `--checkpoint`, `--num-per-class`, `--classes`, `--compose`, `--num-images`, `--background-mode`
+
+### Architecture
+
+- `train_diffusion.py` — DDPM training with `UNet2DModel` (diffusers), cosine schedule, class-label embeddings, minority class oversampling
+- `generate_diffusion.py` — reverse diffusion inference with two modes: crop-only or full scene composition (reuses `generate_synthetic.py` background/composition pipeline)

@@ -4,3 +4,7 @@ scikit-image>=0.21
 albumentations>=1.3
 Pillow>=10.0
 tqdm>=4.65
+torch>=2.0
+torchvision>=0.15
+diffusers>=0.25
+accelerate>=0.25

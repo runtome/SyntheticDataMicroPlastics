@@ -5,6 +5,10 @@ annotation.json
 # Synthetic output
 synthetic_output/
 
+# Diffusion outputs
+diffusion_checkpoints/
+diffusion_output/
+
 # Python
 __pycache__/
 *.pyc
